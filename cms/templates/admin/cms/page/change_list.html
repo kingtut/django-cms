@@ -1,14 +1,7 @@
 {% extends "admin/change_list.html" %}
 {% load adminmedia admin_list i18n cms_admin cms_js_tags %}
 {% block title %}{% trans "List of pages" %}{% endblock %}
-{% block bodyclass %}change-list{% endblock %}
-
-{% if not is_popup %}{% block breadcrumbs %}
-    <div id="breadcrumbs">
-    <a href="../../">{% trans "Home" %}</a> &rsaquo; 
-    <a href="../">{{ app_label|capfirst|escape }}</a> &rsaquo; {{ opts.verbose_name_plural|capfirst|escape }}
-    </div>
-{% endblock %}{% endif %}
+{% block bodyclass %}{{ block.super }} change-list{% endblock %}
 
 {% block coltype %}flex{% endblock %}
 {% block extrahead %}
@@ -17,8 +10,11 @@
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/css/jquery.dialog.css" />
 
 {{ block.super }}
-{# <script type="text/javascript" src="{% admin_static_url %}js/jquery.min.js"></script> #}
+{# <script type="text/javascript" src="{% admin_static_url %}js/jquery.min.js"></script> !!this is empty #}
 {# <script type="text/javascript" src="{{ STATIC_URL }}cms/js/plugins/admincompat.js"></script> #}
+<script type="text/javascript" charset="utf-8">
+    var jQuery = grp.jQuery;
+</script>
 <script type="text/javascript" src="{{ STATIC_URL }}cms/js/csrf.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}cms/js/libs/jquery.livequery.js"></script>
 
@@ -44,13 +40,16 @@
 {% endblock %}
 
 {% block object-tools %}
-	<ul class="tools">
+    {# added grappelli classes #}
+	<ul class="grp-object-tools">
+	{% block object-tools-items %}
 		{% if has_recover_permission %}
 			<li><a href="recover/" class="recoverlink">{% blocktrans with cl.opts.verbose_name_plural|escape as name %}Recover deleted {{name}}{% endblocktrans %}</a></li>
 		{% endif %}
 		{% if has_add_permission %}
-		<li><a href="add/{% if is_popup %}?_popup=1{% endif %}" class="add-handler focus">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
+		<li><a href="add/{% if is_popup %}?_popup=1{% endif %}" class="add-handler focus grp-add-link grp-state-focus">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
 		{% endif %}
+	{% endblock %}
 	</ul>
 
 	{% include "admin/cms/page/loading.html" %}
@@ -93,9 +92,57 @@
 })(window.CMS.$);
 //]]>
 </script>
+            
+    {# From grappelli #}
+    {% if cl.search_fields or cl.has_filters or cl.date_hierarchy %}
+        <div class="grp-module">
+            <div class="grp-row">
+                <div class="l-2cr-fluid {% if cl.has_filters and cl.search_fields %}l-d-12{% else %}{% if cl.has_filters or cl.search_fields %}l-d-6{% endif %}{% endif %}">
+                    {% if cl.has_filters or cl.search_fields %}
+                        {% block aside %}
+                            <aside class="c-1">
+                                <header style="display:none"><h1>{% if cl.search_fields %}Search{% if cl.has_filters %} &amp; {% endif %}{% endif %}{% if cl.has_filters %}Filters{% endif %}</h1></header>
+                                <!-- SEARCH -->
+                                {% if cl.search_fields %}
+                                    {% block search %}
+                                        <div id="search" class="g-d-6 g-d-f">
+                                            {% search_form cl %}
+                                        </div>
+                                    {% endblock %}
+                                {% endif %}
+                                <!-- FILTERS -->
+                                {% if cl.has_filters %}
+                                    {% block filters %}
+                                        <div id="grp-filters" class="filter g-d-6 g-d-l">
+                                            <div class="grp-pulldown-container">
+                                                <a href="javascript://" class="grp-button grp-pulldown-handler">{% trans 'Filter' %}</a>
+                                                <ul class="grp-pulldown-content" style="display: none">
+                                                    {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    {% endblock %}
+                                {% endif %}
+                            </aside>
+                        {% endblock %}
+                    {% endif %}
+                    {% block pagination_top %}
+                        <div class="c-2">
+                            <!-- PAGINATION TOP -->
+                            {% pagination cl %}
+                        </div>
+                    {% endblock %}
+                </div>
+            </div>            
+            <!-- DATE HIERARCHY -->
+            {% block date_hierarchy %}
+                {% if cl.date_hierarchy %}{% date_hierarchy cl %}{% endif %}
+            {% endblock %}
+        </div>
+    {% endif %}
+    {# End grappelli #}
+    
 
-
-<div class="module changelist-filters">
 {% if cl.has_access_to_multiple_sites %}
 	<div id="site-selector">{% trans "Pages on:" %}
 		<select id="site-select">{% for site in cl.sites %}
@@ -105,37 +152,7 @@
 {% else %}
 	<input type="hidden" id="site-select" value="{{ cl.sites.0.pk }}">
 {% endif %}
-
-
-{% if search_form or cl.has_filters or cl.date_hierarchy %}
-        <!-- PAGINATION TOP -->
-        {% pagination cl %}
-        {% if cl.has_filters or search_form %}
-            <!-- FILTERS -->
-            {% if cl.has_filters %}
-                <div id="filters" class="module filter span-6">
-                    <div class="pulldown-container">
-                        <a href="javascript://" class="button toggle-filters">{% trans 'Filter' %}</a>
-                        <div class="filter-pulldown">
-                            {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-                <!-- SEARCH -->
-                {% if not search_form %}
-                    <div id="search" class="module search span-6">
-                        {% block search %}{% search_form cl %}{% endblock %}
-                    </div>
-                {% endif %}
-        {% endif %}
-        <br clear="all" />
-    <!-- DATE HIERARCHY -->
-    {% if cl.date_hierarchy %}
-        {% date_hierarchy cl %}
-    {% endif %}
-{% endif %}
-</div>
+            
 <div id="changelist"> 
 	<div id="content-main"{% if cl.is_filtered %} class="activ-filter"{% endif %}>
 		{% include "admin/cms/page/change_list_tree.html" %}

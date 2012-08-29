@@ -56,8 +56,9 @@
     color: #808080 !important;
 }
 
-.plugin-holder div.column,
-.plugin-holder div.row {
+.plugin-holder div.c-1
+.plugin-holder div.c-2,
+.plugin-holder div.grp-row {
 	margin: 0 !important;
 	padding: 0 !important;
 }
@@ -75,6 +76,14 @@ fieldset.general {
 }
     {% endif %}
 {% endif %}
+
+.grp-module.hidden, .plugin-holder .c-1 {
+	display: none !important;
+}
+
+.plugin-list-holder ul.plugin-list {
+	margin-bottom: 10px !important;
+}
 
 -->
 </style>

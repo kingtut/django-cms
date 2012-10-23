@@ -1,0 +1,70 @@
+.grp-row .vTextField, 
+.grp-row .vURLField, 
+.grp-row .vFileBrowseField, 
+.grp-row textarea, 
+.grp-row .vLargeTextField, 
+.grp-row .vXMLLargeTextField, 
+.grp-row .vAutocompleteSearchField, 
+.grp-row .vM2MAutocompleteSearchField {
+    width: 100%;
+}
+
+.is_plain p.help {
+    margin: 0;
+    padding: 0 !important;
+    color: #666;
+}
+
+
+.plugin-list-holder ul.plugin-list {
+	margin-bottom: 10px !important;
+}
+
+.plugin-editor > p {
+	margin-left: 20px;
+}
+
+.add-plugin.addlink {
+	background-position: 65px;
+	padding-right: 15px;
+}
+
+.addlink {
+	background: url(../../cms/images/icon_addlink.gif) no-repeat;
+}
+
+.grp-module.hidden, .plugin-holder .c-1 {
+	display: none !important;
+}
+
+fieldset.grp-module .grp-row.help_content {
+	padding: 0;
+}
+
+.grp-tools input {
+	position: absolute !important;
+}
+
+body.text-text #grp-content-container {
+	background-color: #eee;
+	border: 1px solid #ccc;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	-o-border-radius: 3px;
+	-ms-border-radius: 3px;
+	-khtml-border-radius: 3px;
+	border-radius: 3px;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.plugin-submit-row {
+	padding: 10px;
+	display: block;
+}
+
+.grp-module.plugin-holder .grp-row {
+	padding: 0;
+}

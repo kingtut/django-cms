@@ -4,7 +4,7 @@ from cms.models.fields import PlaceholderField
 from cms.models.placeholdermodel import Placeholder
 from cms.models.pluginmodel import CMSPlugin
 from cms.plugin_pool import plugin_pool
-from cms.utils import get_language_from_request, cms_static_url
+from cms.utils import get_language_from_request, cms_static_url, get_cms_setting
 from cms.utils.permissions import has_plugin_permission
 from copy import deepcopy
 from django.conf import settings
@@ -30,7 +30,7 @@ class PlaceholderAdmin(ModelAdmin):
                 'css/plugin_editor.css',
             )]
         }
-        js = ['%sjs/jquery.min.js' % admin_static_url()] + [cms_static_url(path) for path in [
+        js = [cms_static_url(path) for path in [
                 'js/plugins/admincompat.js',
                 'js/csrf.js',
                 'js/libs/jquery.query.js',
@@ -151,7 +151,7 @@ class PlaceholderAdmin(ModelAdmin):
             return HttpResponseForbidden(_("You don't have permission to add content here."))
         
         # check the limits defined in CMS_PLACEHOLDER_CONF for this placeholder
-        limits = settings.CMS_PLACEHOLDER_CONF.get(placeholder.slot, {}).get('limits', None)
+        limits = get_cms_setting('PLACEHOLDER_CONF').get(placeholder.slot, {}).get('limits', None)
         if limits:
             count = placeholder.cmsplugin_set.count()
             global_limit = limits.get("global", None)
@@ -202,7 +202,29 @@ class PlaceholderAdmin(ModelAdmin):
             post_request = request.POST.copy()
             post_request['_continue'] = True
             request.POST = post_request
-        
+
+        if request.POST.get("_cancel", False):
+            # cancel button was clicked
+            context = {
+                'CMS_MEDIA_URL': get_cms_setting('MEDIA_URL'),
+                'plugin': cms_plugin,
+                'is_popup': True,
+                'name': unicode(cms_plugin),
+                "type": cms_plugin.get_plugin_name(),
+                'plugin_id': plugin_id,
+                'icon': force_escape(escapejs(cms_plugin.get_instance_icon_src())),
+                'alt': force_escape(escapejs(cms_plugin.get_instance_icon_alt())),
+                'cancel': True,
+            }
+            instance = cms_plugin.get_plugin_instance()[0]
+            if not instance:
+                # cancelled before any content was added to plugin
+                cms_plugin.delete()
+                context.update({
+                    "deleted":True,
+                })
+            return render_to_response('admin/cms/page/plugin_forms_ok.html', context, RequestContext(request))
+
         if not instance:
             # instance doesn't exist, call add view
             response = plugin_admin.add_view(request)
@@ -219,13 +241,13 @@ class PlaceholderAdmin(ModelAdmin):
             saved_object = plugin_admin.saved_object
             
             context = {
-                'CMS_MEDIA_URL': settings.CMS_MEDIA_URL, 
+                'CMS_MEDIA_URL': get_cms_setting('MEDIA_URL'),
                 'plugin': saved_object, 
                 'is_popup': True, 
                 'name': unicode(saved_object), 
                 "type": saved_object.get_plugin_name(),
                 'plugin_id': plugin_id,
-                'icon': force_escape(escapejs(saved_object.get_instance_icon_src())),
+                'icon': force_escape(saved_object.get_instance_icon_src()),
                 'alt': force_escape(escapejs(saved_object.get_instance_icon_alt())),
             }
             return render_to_response('admin/cms/page/plugin_forms_ok.html', context, RequestContext(request))

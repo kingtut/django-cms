@@ -3,6 +3,7 @@ from cms.cache.permissions import get_permission_cache, set_permission_cache
 from cms.exceptions import NoPermissionsException
 from cms.models.query import PageQuerySet
 from cms.publisher import PublisherManager
+from cms.utils import get_cms_setting
 from cms.utils.i18n import get_fallback_languages
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -21,9 +22,9 @@ class PageManager(PublisherManager):
         return PageQuerySet(self.model)
 
     def drafts(self):
-        return super(PageManager, self).drafts().exclude(
-            publisher_state=self.model.PUBLISHER_STATE_DELETE
-        )
+        return super(PageManager, self).drafts()#.exclude(
+            #publisher_state=self.model.PUBLISHER_STATE_DELETE
+        #)
 
     def public(self):
         return super(PageManager, self).public().exclude(
@@ -101,8 +102,7 @@ class PageManager(PublisherManager):
         """
         from cms.plugin_pool import plugin_pool
         qs = self.get_query_set()
-        if settings.CMS_MODERATOR:
-            qs = qs.public()
+        qs = qs.public()
 
         if current_site_only:
             site = Site.objects.get_current()
@@ -339,7 +339,9 @@ class PagePermissionManager(BasicPagePermissionManager):
         NOTE: this returns just PagePermission instances, to get complete access
         list merge return of this function with Global permissions.
         """
-        from cms.models import ACCESS_DESCENDANTS, ACCESS_CHILDREN,\
+        # permissions should be managed on the draft page only
+        page = page.get_draft_object()
+        from cms.models import ACCESS_DESCENDANTS, ACCESS_CHILDREN, \
             ACCESS_PAGE_AND_CHILDREN, ACCESS_PAGE_AND_DESCENDANTS
         # code taken from
         # https://github.com/divio/django-cms/issues/1113#issuecomment-3376790
@@ -416,14 +418,6 @@ class PagePermissionsPermissionManager(models.Manager):
         """
         return self.__get_id_list(user, site, "can_move_page")
 
-    def get_moderate_id_list(self, user, site):
-        """Give a list of pages which user can moderate. If moderation isn't
-        installed, nobody can moderate.
-        """
-        if not settings.CMS_MODERATOR:
-            return []
-        return self.__get_id_list(user, site, "can_moderate")
-
     def get_view_id_list(self, user, site):
         """Give a list of pages which user can view.
         """
@@ -457,11 +451,11 @@ class PagePermissionsPermissionManager(models.Manager):
         if attr != "can_view":
             if not user.is_authenticated() or not user.is_staff:
                 return []
-        if user.is_superuser or not settings.CMS_PERMISSION:
+        if user.is_superuser or not get_cms_setting('PERMISSION'):
             # got superuser, or permissions aren't enabled? just return grant
             # all mark
             return PagePermissionsPermissionManager.GRANT_ALL
-        # read from cache if posssible
+        # read from cache if possible
         cached = get_permission_cache(user, attr)
         if cached is not None:
             return cached
@@ -479,7 +473,6 @@ class PagePermissionsPermissionManager(models.Manager):
         qs.order_by('page__tree_id', 'page__level', 'page__lft')
         # default is denny...
         page_id_allow_list = []
-
         for permission in qs:
             if getattr(permission, attr):
 

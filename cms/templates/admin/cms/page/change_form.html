@@ -92,14 +92,17 @@ fieldset.general {
 {% endblock %}
 
 
-{% block breadcrumbs %}{% if not is_popup %}
-<div class="breadcrumbs">
-     <a href="../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../">{{ app_label|capfirst|escape }}</a> &rsaquo; 
-     {% if can_change %}<a href="../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo;
-     {% if add %}{% trans "Add" %} {{ opts.verbose_name }}{% else %}{{ original.get_title|truncatewords:"18" }}{% endif %}
+{% block breadcrumbs %}
+    {% if not is_popup %}
+    <ul>
+        <li><a href="../../../">{% trans "Home" %}</a></li>
+        <li><a href="../../">{{ app_label|capfirst|escape }}</a></li>
+        {% if can_change %}<li><a href="../">{{ opts.verbose_name_plural|capfirst }}</a></li>{% else %}<li>{{ opts.verbose_name_plural|capfirst }}</li>{% endif %}
+        {% if add %}<li>{% trans "Add" %} {{ opts.verbose_name }}</li>{% else %}<li>{{ original.get_title|truncatewords:"18" }}</li>{% endif %}
+    </ul>
 </div>
-{% endif %}{% endblock %}
+    {% endif %}
+{% endblock %}
 
 {% block content_title %}
 	{% if delete_requested %}

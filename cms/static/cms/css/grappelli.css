@@ -30,7 +30,11 @@
 }
 
 .addlink {
-	background: url(../../cms/images/icon_addlink.gif) no-repeat;
+	background: url(../jstree/themes/default/plus.gif) no-repeat;
+}
+
+.deletelink {
+	background: url(../jstree/themes/default/remove.gif) no-repeat;
 }
 
 .grp-module.hidden, .plugin-holder .c-1 {
@@ -67,4 +71,8 @@ body.text-text #grp-content-container {
 
 .grp-module.plugin-holder .grp-row {
 	padding: 0;
+}
+
+#changelist > #content-main {
+    padding-top: 80px;
 }

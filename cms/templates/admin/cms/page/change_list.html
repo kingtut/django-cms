@@ -8,6 +8,7 @@
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/css/pages.css"/>
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/jstree/tree_component.css" />
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/css/jquery.dialog.css" />
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/css/grappelli.css" />
 
 {{ block.super }}
 {# <script type="text/javascript" src="{% admin_static_url %}js/jquery.min.js"></script> !!this is empty #}
@@ -32,20 +33,6 @@
 <script type="text/javascript" src="{{ STATIC_URL }}cms/js/plugins/cms.setup.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}cms/js/plugins/cms.base.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}cms/js/change_list.js"></script>
-
-<style type="text/css" media="screen">
-    #changelist > #content-main {
-	    padding-top: 80px;
-    }
-    
-    .addlink {
-    	background: url("{{ STATIC_URL }}cms/images/icon_addlink.gif") no-repeat;
-    }
-
-    .deletelink {
-    	background: url("{{ STATIC_URL }}cms/images/icon_deletelink.gif") no-repeat;
-    }
-</style>
 
 {% if cl.is_filtered %}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}cms/jstree/themes/default/style.css" />

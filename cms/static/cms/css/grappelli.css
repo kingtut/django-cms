@@ -29,11 +29,11 @@
 	padding-right: 15px;
 }
 
-a.addlink {
+.addlink {
 	background: url(../images/icon_addlink.gif) no-repeat;
 }
 
-a.deletelink {
+.deletelink {
     background: url(../images/icon_deletelink.gif) no-repeat;
 }
 

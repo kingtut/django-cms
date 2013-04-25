@@ -92,6 +92,18 @@ fieldset.general {
 {% endblock %}
 
 
+{% block breadcrumbs %}
+    {% if not is_popup %}
+    <ul>
+        <li><a href="../../../">{% trans "Home" %}</a></li>
+        <li><a href="../../">{{ app_label|capfirst|escape }}</a></li>
+        {% if can_change %}<li><a href="../">{{ opts.verbose_name_plural|capfirst }}</a></li>{% else %}<li>{{ opts.verbose_name_plural|capfirst }}</li>{% endif %}
+        {% if add %}<li>{% trans "Add" %} {{ opts.verbose_name }}</li>{% else %}<li>{{ original.get_title|truncatewords:"18" }}</li>{% endif %}
+    </ul>
+</div>
+    {% endif %}
+{% endblock %}
+
 {% block content_title %}
 	{% if delete_requested %}
 	<h1 class="moderation-approve-deletion">{% trans "Confirm page deletion" %}</h1>

@@ -1,5 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_modify adminmedia cms_tags cms_admin %}
+{% load i18n admin_modify adminmedia cms_tags cms_admin grp_tags %}
 {% load url from future %}
 {% block title %}{% trans "Change a page" %}{% endblock %}
 
@@ -17,14 +17,16 @@
 <script type="text/javascript">
 //<![CDATA[	
 
-	$(document).ready(function (){
-		$("#id_title").keyup(function () {
-			var e = $("#id_slug")[0];
-			if(!e._changed) {
-				e.value = URLify(this.value, 64);
-			}
-	    });
-	});
+    (function($) {
+    	$(document).ready(function (){
+    		$("#id_title").keyup(function () {
+    			var e = $("#id_slug")[0];
+    			if(!e._changed) {
+    				e.value = URLify(this.value, 64);
+    			}
+    	    });
+    	});
+	})(grp.jQuery);
 
 //]]>
 </script>
@@ -54,8 +56,9 @@
     color: #808080 !important;
 }
 
-.plugin-holder div.column,
-.plugin-holder div.row {
+.plugin-holder div.c-1
+.plugin-holder div.c-2,
+.plugin-holder div.grp-row {
 	margin: 0 !important;
 	padding: 0 !important;
 }
@@ -74,6 +77,14 @@ fieldset.general {
     {% endif %}
 {% endif %}
 
+.grp-module.hidden, .plugin-holder .c-1 {
+	display: none !important;
+}
+
+.plugin-list-holder ul.plugin-list {
+	margin-bottom: 10px !important;
+}
+
 -->
 </style>
 
@@ -81,43 +92,28 @@ fieldset.general {
 {% endblock %}
 
 
-{% block breadcrumbs %}{% if not is_popup %}
-<div id="breadcrumbs">
-     <a href="../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../">{{ app_label|capfirst|escape }}</a> &rsaquo; 
-     {% if has_change_permission %}<a href="../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo; 
-     {% if add %}{% trans "Add" %} {{ opts.verbose_name }}{% else %}{{ original.get_title|truncatewords:"18" }}{% endif %}
-</div>
-{% endif %}{% endblock %}
-
 {% block content_title %}
-	{% if moderation_delete_request %}
-	<h1 class="moderation-approve-deletion">{% trans "Approve page deletion" %}</h1>
+	{% if delete_requested %}
+	<h1 class="moderation-approve-deletion">{% trans "Confirm page deletion" %}</h1>
 
 	{% else %}
 
-	<h1>{{ title }}
-	{% if CMS_MODERATOR %}
-		{% if moderation_required %}<span class="moderation-requires-approvement">{% blocktrans %}(requires approvement at {{ moderation_level }} level){% endblocktrans %}</span>
-		{% else %}<span>{% trans '(you can perform actions on this page directly)' %}</span>
-		{% endif %}
-	{% endif %}
-	</h1>
+	<h1>{{ title }}</h1>
 	{% endif %}
 	
 {% endblock %}
 
 {% block object-tools %}
 {% if change %}{% if not is_popup %}
-  <ul class="tools">
+  <ul class="tools grp-object-tools">
 	{% if moderation_delete_request %}<li><a href="remove-delete-state/" class="approvelink">{% trans "Remove delete request" %}</a></li>{% endif %}  	
 	{% if moderator_should_approve %}
 	<li><a href="approve/" class="approvelink">{% if moderation_delete_request %}{% trans "Approve delete" %}{% else %}{% trans "Approve" %} {% trans "draft" %}{% endif %}</a></li>
 	<li><a href="{% if current_site_id %}{% ifnotequal current_site_id page.site.id %}http{% if request.is_secure %}s{% endif %}://{{ page.site.domain }}{% endifnotequal %}{% endif %}{{ page.get_absolute_url }}?preview&draft=1" class="previewdraftlink">{% trans "Preview" %} {% trans "draft" %}</a></li>
 	{% endif %}
-	
+	{% if can_change and page.published and page.is_dirty %}<li><a href="revert/" class="revertlink">{% trans "Revert to public" %}</a></li>{% endif %}
 	<li><a href="history/" class="historylink">{% trans "History" %}</a></li>
-  	{% if has_absolute_url %}<li><a href="{% if current_site_id %}{% ifnotequal current_site_id page.site.id %}http{% if request.is_secure %}s{% endif %}://{{ page.site.domain }}{% endifnotequal %}{% endif %}{{ page|preview_link:language }}?preview" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+  	{% if has_absolute_url %}<li><a href="{% if current_site_id %}{% ifnotequal current_site_id page.site.id %}http{% if request.is_secure %}s{% endif %}://{{ page.site.domain }}{% endifnotequal %}{% endif %}{{ page|preview_link:language }}?preview" class="viewsitelink grp-state-focus">{% trans "View on site" %}</a></li>{% endif%}
   </ul>
 {% endif %}{% endif %}
 {% endblock %}
@@ -150,14 +146,21 @@ fieldset.general {
     <ul class="errorlist">{% for error in adminform.form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
 {% endif %}
 
-{% for fieldset in adminform %}
-  {% include "admin/cms/page/includes/fieldset.html" %}
-{% endfor %}
-
-
-{% for inline_admin_formset in inline_admin_formsets %}
-    {% include inline_admin_formset.opts.template %}
-{% endfor %}
+    <!-- Fieldsets -->
+    {% block field_sets %}
+        {% for fieldset in adminform %}
+            {% include "admin/includes/fieldset.html" %}
+        {% endfor %}
+    {% endblock %}
+    
+    {% block after_field_sets %}{% endblock %}
+    
+    <!-- Inlines -->
+    {% block inline_field_sets %}
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+    {% endblock %}
 
 
 {% if not add %}
@@ -200,102 +203,13 @@ fieldset.general {
 	})(window.CMS.$);
 	</script>{% endif %}
 
-	{% if CMS_MODERATOR and moderation_required %}
-		<div id="dialog" title="Approve dialog">
-			<p>{% blocktrans %}This page must be moderated at level {{ moderation_level }}, post a message for moderator.{% endblocktrans %}</p>
-			<div class="row"><input type="text" name="df_moderator_message" id="id_df_moderator_message" class="wide" value=""/></div>
-			<div class="row"><input type="checkbox" name="df_moderator_state" id="id_df_moderator_state" value="1"/><label for="id_df_moderator_reguest">{% trans 'Request approvemet' %}</label></div>
-		</div>
-
-		<script type="text/javascript">
-		//<![CDATA[	
-		(function($) {
-			$(function(){
-			
-				var submitActor;
-				var forceSubmit = false;
-				var seen = false;
-
-				// change submit states, open dialog
-				$('#page_form').submit(function(event){
-					return showDialog(event);
-				});
-
-				$('#page_form input[name=_continue]').click(function(event){
-					return showDialog(event, this);
-				});
-
-				function showDialog(event, actor) {
-					if (forceSubmit) return true; // escape sequence
-
-					if (!seen) {
-						// show previously posted message if there were an error
-						$('#id_df_moderator_message').val($('#id_moderator_message').val());
-					}
-					seen = true;
-					event.preventDefault();
-					submitActor = actor;
-					$('#dialog').dialog('open');
-					return false;
-				}
-
-				function dialogSave(){
-					// assign values from dialog form to real form
-					$('#id_moderator_message').val($('#id_df_moderator_message').val());
-					$('#id_moderator_state').val(
-						$('#id_df_moderator_state').is(':checked') ? $('#id_df_moderator_state').val() : 0 
-					);
-					$('#dialog').dialog('close');
-					forceSubmit = true;
-					$(submitActor || '#page_form input[name=_save]').click();
-					return false;
-				}
-
-				$('#dialog').dialog({
-					bgiframe: true,
-					autoOpen: false,
-					height: 200,
-					width: 400,
-					modal: true,
-					buttons: {
-						Cancel: function() {
-							$(this).dialog('close');
-						},
-						Save: function() {
-							dialogSave();
-						}
-					},
-					open: function(){
-						var val = $('#id_moderator_state').val();
-						$('#id_df_moderator_state').attr('checked', val >= 1 ? 'checked': '');
-						$('#id_df_moderator_message')
-							.focus()
-							.keydown(function(event) { if (event.keyCode == 13) dialogSave()});
-
-						// add default button class to last rendered button (Save)
-						$(this.uiDialogButtonPane).find('div.ui-dialog-buttonpane button:last').addClass('default');
-					},
-					close: function(){
-						forceSubmit = false;
-					}
-				});
-			});
-		})(window.CMS.$);
-		//]]>
-		</script>
-	{% endif %}
-
 {% endif %}
 
 {% block after_related_objects %}{% endblock %}
 
 {% if add %}
-    <div class="module footer">
-	    <ul class="submit-row">
-			<li class="submit-button-container"><input type="submit" name="_save" class="default" value="{% trans 'Save' %}" {{ onclick_attrib }}/></li>
-			<li class="submit-button-container"><input type="submit" name="_continue" value="{% trans 'Save and continue editing' %}" {{ onclick_attrib }}/></li
-		</ul>
-	</div>
+    <!-- Submit-Row -->
+    {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
 {% else %}
 	{% if not moderation_delete_request %}{% page_submit_row %}{% endif %}
 {% endif %}

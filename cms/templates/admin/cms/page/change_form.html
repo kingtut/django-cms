@@ -98,12 +98,13 @@ fieldset.general {
     <ul>
         <li><a href="../../../">{% trans "Home" %}</a></li>
         <li><a href="../../">{{ app_label|capfirst|escape }}</a></li>
-        {% if can_change %}<li><a href="../">{{ opts.verbose_name_plural|capfirst }}</a></li>{% else %}<li>{{ opts.verbose_name_plural|capfirst }}</li>{% endif %}
+        {% if has_change_permission %}<li><a href="../">{{ opts.verbose_name_plural|capfirst }}</a></li>{% else %}<li>{{ opts.verbose_name_plural|capfirst }}</li>{% endif %}
         {% if add %}<li>{% trans "Add" %} {{ opts.verbose_name }}</li>{% else %}<li>{{ original.get_title|truncatewords:"18" }}</li>{% endif %}
     </ul>
 </div>
     {% endif %}
 {% endblock %}
+{% block page-tools %}{% endblock %}
 
 {% block content_title %}
 	{% if delete_requested %}
@@ -124,7 +125,7 @@ fieldset.general {
 	<li><a href="approve/" class="approvelink">{% if moderation_delete_request %}{% trans "Approve delete" %}{% else %}{% trans "Approve" %} {% trans "draft" %}{% endif %}</a></li>
 	<li><a href="{% if current_site_id %}{% ifnotequal current_site_id page.site.id %}http{% if request.is_secure %}s{% endif %}://{{ page.site.domain }}{% endifnotequal %}{% endif %}{{ page.get_absolute_url }}?preview&draft=1" class="previewdraftlink">{% trans "Preview" %} {% trans "draft" %}</a></li>
 	{% endif %}
-	{% if can_change and page.published and page.is_dirty %}<li><a href="revert/" class="revertlink">{% trans "Revert to public" %}</a></li>{% endif %}
+	{% if has_change_permission and page.published and page.is_dirty %}<li><a href="revert/" class="revertlink">{% trans "Revert to public" %}</a></li>{% endif %}
 	<li><a href="history/" class="historylink">{% trans "History" %}</a></li>
   	{% if has_absolute_url %}<li><a href="{% if current_site_id %}{% ifnotequal current_site_id page.site.id %}http{% if request.is_secure %}s{% endif %}://{{ page.site.domain }}{% endifnotequal %}{% endif %}{{ page|preview_link:language }}?preview" class="viewsitelink grp-state-focus">{% trans "View on site" %}</a></li>{% endif%}
   </ul>
